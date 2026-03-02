@@ -1,4 +1,5 @@
 import os
+import sys
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
 import pandas as pd
@@ -182,21 +183,99 @@ DEPENDENCIAS_POR_TELA = {
 }
 
 
+def _extrair_caminho_dependencia(texto_dependencia):
+    if not isinstance(texto_dependencia, str) or ":" not in texto_dependencia:
+        return None
+
+    _, caminho = texto_dependencia.split(":", 1)
+    caminho = caminho.strip()
+    if not caminho:
+        return None
+    return normalizar_caminho(caminho)
+
+
+def abrir_diretorio_dependencia(caminho):
+    caminho = normalizar_caminho(caminho)
+    destino = caminho if os.path.isdir(caminho) else os.path.dirname(caminho)
+
+    if not destino or not os.path.exists(destino):
+        messagebox.showwarning("Dependência não encontrada", f"Não foi possível localizar:\n{caminho}")
+        return
+
+    try:
+        if os.name == "nt":
+            os.startfile(destino)
+        elif sys.platform == "darwin":
+            subprocess.run(["open", destino], check=False)
+        else:
+            subprocess.run(["xdg-open", destino], check=False)
+    except Exception as erro:
+        messagebox.showerror("Erro ao abrir diretório", f"Não foi possível abrir o diretório.\n{erro}")
+
+
 def exibir_ajuda_dependencias(contexto="Geral"):
-    dependencias = DEPENDENCIAS_POR_TELA.get(contexto, [])
-    linhas = DEPENDENCIAS_POR_TELA["Geral"] + dependencias
-    texto = "\n".join(f"• {linha}" for linha in linhas)
-    messagebox.showinfo(f"Dependências - {contexto}", texto)
+    dependencias = DEPENDENCIAS_POR_TELA["Geral"] + DEPENDENCIAS_POR_TELA.get(contexto, [])
+
+    janela_dependencias = tk.Toplevel()
+    janela_dependencias.title(f"Dependências - {contexto}")
+    janela_dependencias.geometry("920x520")
+    janela_dependencias.configure(bg="white")
+
+    titulo = tk.Label(
+        janela_dependencias,
+        text=f"Dependências da tela: {contexto}",
+        font=("Arial", 13, "bold"),
+        bg="white"
+    )
+    titulo.pack(pady=(12, 8))
+
+    frame_lista = tk.Frame(janela_dependencias, bg="white")
+    frame_lista.pack(fill="both", expand=True, padx=12, pady=6)
+
+    canvas = tk.Canvas(frame_lista, bg="white", highlightthickness=0)
+    barra = ttk.Scrollbar(frame_lista, orient="vertical", command=canvas.yview)
+    conteudo = tk.Frame(canvas, bg="white")
+
+    conteudo.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    canvas.create_window((0, 0), window=conteudo, anchor="nw")
+    canvas.configure(yscrollcommand=barra.set)
+
+    canvas.pack(side="left", fill="both", expand=True)
+    barra.pack(side="right", fill="y")
+
+    for item in dependencias:
+        linha = tk.Frame(conteudo, bg="white")
+        linha.pack(fill="x", padx=4, pady=4)
+
+        texto = tk.Label(
+            linha,
+            text=f"• {item}",
+            anchor="w",
+            justify="left",
+            bg="white",
+            font=("Arial", 10),
+            wraplength=680
+        )
+        texto.pack(side="left", fill="x", expand=True)
+
+        caminho = _extrair_caminho_dependencia(item)
+        if caminho:
+            tk.Button(
+                linha,
+                text="Abrir diretório",
+                command=lambda c=caminho: abrir_diretorio_dependencia(c),
+                bg="#e6f0ff",
+                cursor="hand2"
+            ).pack(side="right", padx=6)
 
 
 def adicionar_botao_dependencias(janela, contexto):
     botao = tk.Button(
         janela,
-        text="?",
-        font=("Arial", 13, "bold"),
+        text="Verificar dependências",
+        font=("Arial", 10, "bold"),
         command=lambda: exibir_ajuda_dependencias(contexto),
         bg="#f4f4f4",
-        bd=0,
         cursor="hand2"
     )
     botao.place(relx=0.98, rely=0.02, anchor="ne")
