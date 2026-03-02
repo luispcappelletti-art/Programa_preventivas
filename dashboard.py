@@ -97,6 +97,7 @@ def garantir_estrutura_minima():
         pd.DataFrame(columns=["nome_cliente", "segmento", "cidade", "estado"]).to_excel(clientes, index=False)
 
 
+
 def _normalizar_argumento_caminho(valor):
     if isinstance(valor, str):
         return normalizar_caminho(valor)
@@ -242,6 +243,7 @@ def abrir_tela_cadastro_pecas():
     tela_cadastro.geometry("600x600")
     tela_cadastro.configure(bg="#f4f4f4")
     tela_cadastro.grab_set()
+
 
 
     # Função para exibir ajuda
@@ -419,6 +421,7 @@ def abrir_tela_cadastro_clientes():
     tela_clientes.title("Cadastro de Clientes")
     tela_clientes.geometry("700x750")
     tela_clientes.grab_set()
+
 
     # Abas
     abas = ttk.Notebook(tela_clientes)
@@ -682,6 +685,7 @@ def abrir_tela_orcamento_preventivas():
     tela_orcamento.title("Orçamento de Preventivas")
     tela_orcamento.geometry("600x600")
     tela_orcamento.grab_set()
+
 
     def carregar_clientes():
         caminho_clientes = os.path.join(
@@ -1368,6 +1372,7 @@ def abrir_tela_orcamento_preventivas():
 def consultar_orcamentos_pendentes():
     tela_consulta = tk.Toplevel()
     tela_consulta.title("Consultar Orçamentos")
+
     tela_consulta.geometry("600x400")
     tela_consulta.grab_set()
 
@@ -1830,6 +1835,7 @@ def consultar_orcamentos_cancelados():
     janela.configure(bg="white")
     janela.grab_set()
 
+
     # Campo de pesquisa
     tk.Label(janela, text="Pesquisar Orçamento:", bg="white").pack(pady=5)
     entrada_pesquisa = tk.Entry(janela, width=50)
@@ -1977,6 +1983,7 @@ def cadastro_preventivas():
         tela_consulta.title("Consultar Orçamentos")
         tela_consulta.geometry("600x800")
         tela_consulta.grab_set()
+        adicionar_botao_dependencias(tela_consulta, "Cadastro de Preventivas")
 
         ttk.Label(tela_consulta, text="Pesquisar Orçamento (ID ou Nome do Cliente):").pack()
         entrada_pesquisa = ttk.Entry(tela_consulta)
@@ -2490,6 +2497,7 @@ def tela_consulta_preventivas():
     nova_tela.title("Consulta Preventivas Concluídas")
     nova_tela.geometry("900x600")
     nova_tela.grab_set()
+    adicionar_botao_dependencias(nova_tela, "Consulta de Preventivas")
 
     # Filtros na parte superior da tela
     ttk.Label(nova_tela, text="Filtrar por Cliente:").grid(row=0, column=0, padx=10, pady=5)
@@ -2909,6 +2917,7 @@ def adicionar_lembrete():
     lembrete_janela.title("Adicionar Lembrete")
     lembrete_janela.geometry("400x300")
     lembrete_janela.grab_set()
+    adicionar_botao_dependencias(lembrete_janela, "Adicionar Lembrete")
 
     # Campos para preencher
     tk.Label(lembrete_janela, text="Nome do Cliente").pack(pady=5)
@@ -3411,6 +3420,7 @@ def abrir_configuracoes():
     janela.geometry("480x330")
     janela.configure(bg="white")
     janela.grab_set()
+    adicionar_botao_dependencias(janela, "Configurações")
 
     fonte_padrao = ("Arial", 11)
 
