@@ -98,84 +98,6 @@ def garantir_estrutura_minima():
 
 
 
-DEPENDENCIAS_TELAS = {
-    "Cadastro de Peças": [
-        ("Planilhas de peças por tipo", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\pecas\<tipo>\*.xlsx"),
-    ],
-    "Cadastro de Clientes": [
-        ("Base de clientes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\clientes.xlsx"),
-        ("Modelos de peças", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\pecas\<tipo>\*.xlsx"),
-    ],
-    "Orçamento de Preventivas": [
-        ("Clientes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\clientes.xlsx"),
-        ("Histórico de vendas", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\historico_de_vendas\FATURAMENTO_PREV_PECAS.xlsx"),
-        ("Estoque", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\estoque\*.xlsx"),
-        ("Orçamentos pendentes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\pendentes\*.xlsx"),
-        ("PDFs de orçamento", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\pdfs\*.pdf"),
-        ("Template PDF", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\personalizacao\template.pdf"),
-        ("Logo", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\personalizacao\logo.png"),
-    ],
-    "Orçamentos Pendentes": [
-        ("Planilhas pendentes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\pendentes\*.xlsx"),
-        ("Motivos de cancelamento", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\motivos_de_cancelamento.txt"),
-    ],
-    "Orçamentos Cancelados": [
-        ("Planilhas canceladas", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\cancelados\*.xlsx"),
-        ("Motivos de cancelamento", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\motivos_de_cancelamento.txt"),
-        ("Opcionais", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\personalizacao\opcionais.txt"),
-    ],
-    "Cadastro de Preventivas": [
-        ("Orçamentos pendentes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\pendentes\*.xlsx"),
-        ("Orçamentos confirmados", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\confirmados\*.xlsx"),
-        ("Histórico de orçamentos", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\historico_orçamentos\*.xlsx"),
-    ],
-    "Consulta de Preventivas": [
-        ("Preventivas concluídas", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\concluídos\*.xlsx"),
-    ],
-    "Adicionar Lembrete": [
-        ("Clientes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\clientes.xlsx"),
-        ("Lembretes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\notificacoes\*.xlsx"),
-        ("Peças detalhadas", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\informacoes_detalhadas\*.txt"),
-    ],
-    "Configurações": [
-        ("Opcionais", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\personalizacao\opcionais.txt"),
-        ("Template PDF", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\personalizacao\template.pdf"),
-    ],
-}
-
-
-def exibir_dependencias_tela(parent, nome_tela):
-    dependencias = DEPENDENCIAS_TELAS.get(nome_tela, [])
-    janela = tk.Toplevel(parent)
-    janela.title(f"Dependências - {nome_tela}")
-    janela.geometry("900x420")
-    janela.grab_set()
-
-    texto = tk.Text(janela, wrap="word", font=("Consolas", 10))
-    texto.pack(fill="both", expand=True, padx=10, pady=10)
-
-    texto.insert("end", f"Tela: {nome_tela}\n\n")
-    if not dependencias:
-        texto.insert("end", "Nenhuma dependência cadastrada para esta tela ainda.\n")
-    else:
-        texto.insert("end", "Use os caminhos abaixo para saber quais arquivos/pastas criar ou editar.\n")
-        texto.insert("end", "(legado -> caminho local usado no modo de teste)\n\n")
-        for descricao, caminho_legado in dependencias:
-            texto.insert("end", f"- {descricao}\n")
-            texto.insert("end", f"  legado: {caminho_legado}\n")
-            texto.insert("end", f"  local : {normalizar_caminho(caminho_legado)}\n\n")
-
-    texto.config(state="disabled")
-    ttk.Button(janela, text="Fechar", command=janela.destroy).pack(pady=(0, 10))
-
-
-def adicionar_botao_dependencias(parent, nome_tela):
-    ttk.Button(
-        parent,
-        text="📂 Dependências desta tela",
-        command=lambda: exibir_dependencias_tela(parent, nome_tela)
-    ).pack(pady=5)
-
 def _normalizar_argumento_caminho(valor):
     if isinstance(valor, str):
         return normalizar_caminho(valor)
@@ -321,7 +243,7 @@ def abrir_tela_cadastro_pecas():
     tela_cadastro.geometry("600x600")
     tela_cadastro.configure(bg="#f4f4f4")
     tela_cadastro.grab_set()
-    adicionar_botao_dependencias(tela_cadastro, "Cadastro de Peças")
+
 
 
     # Função para exibir ajuda
@@ -499,7 +421,7 @@ def abrir_tela_cadastro_clientes():
     tela_clientes.title("Cadastro de Clientes")
     tela_clientes.geometry("700x750")
     tela_clientes.grab_set()
-    adicionar_botao_dependencias(tela_clientes, "Cadastro de Clientes")
+
 
     # Abas
     abas = ttk.Notebook(tela_clientes)
@@ -763,7 +685,7 @@ def abrir_tela_orcamento_preventivas():
     tela_orcamento.title("Orçamento de Preventivas")
     tela_orcamento.geometry("600x600")
     tela_orcamento.grab_set()
-    adicionar_botao_dependencias(tela_orcamento, "Orçamento de Preventivas")
+
 
     def carregar_clientes():
         caminho_clientes = os.path.join(
@@ -1450,7 +1372,7 @@ def abrir_tela_orcamento_preventivas():
 def consultar_orcamentos_pendentes():
     tela_consulta = tk.Toplevel()
     tela_consulta.title("Consultar Orçamentos")
-    adicionar_botao_dependencias(tela_consulta, "Orçamentos Pendentes")
+
     tela_consulta.geometry("600x400")
     tela_consulta.grab_set()
 
@@ -1912,7 +1834,7 @@ def consultar_orcamentos_cancelados():
     janela.geometry("900x500")
     janela.configure(bg="white")
     janela.grab_set()
-    adicionar_botao_dependencias(janela, "Orçamentos Cancelados")
+
 
     # Campo de pesquisa
     tk.Label(janela, text="Pesquisar Orçamento:", bg="white").pack(pady=5)
