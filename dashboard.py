@@ -30,6 +30,213 @@ from collections import defaultdict
 from openpyxl.styles import numbers
 
 
+import builtins
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DADOS_DIR = os.path.join(BASE_DIR, "dados_teste")
+DASHBOARD_DIR = os.path.join(DADOS_DIR, "dashboard")
+BASE_DADOS_DIR = os.path.join(DADOS_DIR, "base_dados")
+
+LEGACY_DASHBOARD_ROOT = r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard"
+LEGACY_BASE_DADOS_ROOT = r"G:\ASSISTÊNCIA TÉCNICA\Base de Dados Preventivas e Peças"
+
+
+def normalizar_caminho(caminho):
+    if not isinstance(caminho, str):
+        return caminho
+
+    for antigo, novo in (
+        (LEGACY_DASHBOARD_ROOT, DASHBOARD_DIR),
+        (LEGACY_BASE_DADOS_ROOT, BASE_DADOS_DIR),
+    ):
+        caminho = caminho.replace(antigo, novo)
+        caminho = caminho.replace(antigo.replace("\\", "/"), novo.replace("\\", "/"))
+
+    return os.path.normpath(caminho)
+
+
+def garantir_estrutura_minima():
+    pastas = [
+        DADOS_DIR,
+        BASE_DADOS_DIR,
+        os.path.join(DASHBOARD_DIR, "planilhas"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas", "cnc"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas", "máquina"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas", "fonte"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas", "acessórios"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "historico_de_vendas"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "estoque"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "clientes_explosao"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "informacoes_detalhadas"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "atualizacao_preco"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas avulsas"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "pendentes"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "cancelados"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "confirmados"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "concluídos"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "historico_orçamentos"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "pdfs"),
+        os.path.join(DASHBOARD_DIR, "notificacoes"),
+        os.path.join(DASHBOARD_DIR, "personalizacao"),
+    ]
+    for pasta in pastas:
+        os.makedirs(pasta, exist_ok=True)
+
+    arquivos_texto = {
+        os.path.join(DASHBOARD_DIR, "planilhas", "motivos_de_cancelamento.txt"): "",
+        os.path.join(DASHBOARD_DIR, "personalizacao", "opcionais.txt"): "",
+    }
+    for caminho, conteudo in arquivos_texto.items():
+        if not os.path.exists(caminho):
+            with open(caminho, "w", encoding="utf-8") as f:
+                f.write(conteudo)
+
+    clientes = os.path.join(DASHBOARD_DIR, "planilhas", "clientes.xlsx")
+    if not os.path.exists(clientes):
+        pd.DataFrame(columns=["nome_cliente", "segmento", "cidade", "estado"]).to_excel(clientes, index=False)
+
+
+
+DEPENDENCIAS_TELAS = {
+    "Cadastro de Peças": [
+        ("Planilhas de peças por tipo", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\pecas\<tipo>\*.xlsx"),
+    ],
+    "Cadastro de Clientes": [
+        ("Base de clientes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\clientes.xlsx"),
+        ("Modelos de peças", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\pecas\<tipo>\*.xlsx"),
+    ],
+    "Orçamento de Preventivas": [
+        ("Clientes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\clientes.xlsx"),
+        ("Histórico de vendas", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\historico_de_vendas\FATURAMENTO_PREV_PECAS.xlsx"),
+        ("Estoque", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\estoque\*.xlsx"),
+        ("Orçamentos pendentes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\pendentes\*.xlsx"),
+        ("PDFs de orçamento", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\pdfs\*.pdf"),
+        ("Template PDF", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\personalizacao\template.pdf"),
+        ("Logo", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\personalizacao\logo.png"),
+    ],
+    "Orçamentos Pendentes": [
+        ("Planilhas pendentes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\pendentes\*.xlsx"),
+        ("Motivos de cancelamento", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\motivos_de_cancelamento.txt"),
+    ],
+    "Orçamentos Cancelados": [
+        ("Planilhas canceladas", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\cancelados\*.xlsx"),
+        ("Motivos de cancelamento", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\motivos_de_cancelamento.txt"),
+        ("Opcionais", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\personalizacao\opcionais.txt"),
+    ],
+    "Cadastro de Preventivas": [
+        ("Orçamentos pendentes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\pendentes\*.xlsx"),
+        ("Orçamentos confirmados", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\confirmados\*.xlsx"),
+        ("Histórico de orçamentos", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\historico_orçamentos\*.xlsx"),
+    ],
+    "Consulta de Preventivas": [
+        ("Preventivas concluídas", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\orçamentos\concluídos\*.xlsx"),
+    ],
+    "Adicionar Lembrete": [
+        ("Clientes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\clientes.xlsx"),
+        ("Lembretes", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\notificacoes\*.xlsx"),
+        ("Peças detalhadas", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\planilhas\informacoes_detalhadas\*.txt"),
+    ],
+    "Configurações": [
+        ("Opcionais", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\personalizacao\opcionais.txt"),
+        ("Template PDF", r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard\personalizacao\template.pdf"),
+    ],
+}
+
+
+def exibir_dependencias_tela(parent, nome_tela):
+    dependencias = DEPENDENCIAS_TELAS.get(nome_tela, [])
+    janela = tk.Toplevel(parent)
+    janela.title(f"Dependências - {nome_tela}")
+    janela.geometry("900x420")
+    janela.grab_set()
+
+    texto = tk.Text(janela, wrap="word", font=("Consolas", 10))
+    texto.pack(fill="both", expand=True, padx=10, pady=10)
+
+    texto.insert("end", f"Tela: {nome_tela}\n\n")
+    if not dependencias:
+        texto.insert("end", "Nenhuma dependência cadastrada para esta tela ainda.\n")
+    else:
+        texto.insert("end", "Use os caminhos abaixo para saber quais arquivos/pastas criar ou editar.\n")
+        texto.insert("end", "(legado -> caminho local usado no modo de teste)\n\n")
+        for descricao, caminho_legado in dependencias:
+            texto.insert("end", f"- {descricao}\n")
+            texto.insert("end", f"  legado: {caminho_legado}\n")
+            texto.insert("end", f"  local : {normalizar_caminho(caminho_legado)}\n\n")
+
+    texto.config(state="disabled")
+    ttk.Button(janela, text="Fechar", command=janela.destroy).pack(pady=(0, 10))
+
+
+def adicionar_botao_dependencias(parent, nome_tela):
+    ttk.Button(
+        parent,
+        text="📂 Dependências desta tela",
+        command=lambda: exibir_dependencias_tela(parent, nome_tela)
+    ).pack(pady=5)
+
+def _normalizar_argumento_caminho(valor):
+    if isinstance(valor, str):
+        return normalizar_caminho(valor)
+    return valor
+
+
+_original_open = builtins.open
+
+def _open_compat(arquivo, *args, **kwargs):
+    arquivo = _normalizar_argumento_caminho(arquivo)
+    if isinstance(arquivo, str) and any(modo in args[0] if args else kwargs.get("mode", "r") for modo in ("w", "a", "x", "+")):
+        pasta = os.path.dirname(arquivo)
+        if pasta:
+            os.makedirs(pasta, exist_ok=True)
+    return _original_open(arquivo, *args, **kwargs)
+
+builtins.open = _open_compat
+
+_original_listdir = os.listdir
+os.listdir = lambda path: _original_listdir(_normalizar_argumento_caminho(path))
+
+_original_exists = os.path.exists
+os.path.exists = lambda path: _original_exists(_normalizar_argumento_caminho(path))
+
+_original_remove = os.remove
+os.remove = lambda path: _original_remove(_normalizar_argumento_caminho(path))
+
+_original_makedirs = os.makedirs
+os.makedirs = lambda name, mode=0o777, exist_ok=False: _original_makedirs(_normalizar_argumento_caminho(name), mode=mode, exist_ok=exist_ok)
+
+_original_move = shutil.move
+shutil.move = lambda src, dst, *a, **k: _original_move(_normalizar_argumento_caminho(src), _normalizar_argumento_caminho(dst), *a, **k)
+
+_original_copy = shutil.copy
+shutil.copy = lambda src, dst, *a, **k: _original_copy(_normalizar_argumento_caminho(src), _normalizar_argumento_caminho(dst), *a, **k)
+
+_original_glob = glob.glob
+glob.glob = lambda pathname, *a, **k: _original_glob(_normalizar_argumento_caminho(pathname), *a, **k)
+
+_original_read_excel = pd.read_excel
+pd.read_excel = lambda io, *a, **k: _original_read_excel(_normalizar_argumento_caminho(io), *a, **k)
+
+_original_read_csv = pd.read_csv
+pd.read_csv = lambda filepath_or_buffer, *a, **k: _original_read_csv(_normalizar_argumento_caminho(filepath_or_buffer), *a, **k)
+
+_original_df_to_excel = pd.DataFrame.to_excel
+
+def _to_excel_compat(self, excel_writer, *args, **kwargs):
+    excel_writer = _normalizar_argumento_caminho(excel_writer)
+    if isinstance(excel_writer, str):
+        pasta = os.path.dirname(excel_writer)
+        if pasta:
+            os.makedirs(pasta, exist_ok=True)
+    return _original_df_to_excel(self, excel_writer, *args, **kwargs)
+
+pd.DataFrame.to_excel = _to_excel_compat
+
+if hasattr(os, "startfile"):
+    _original_startfile = os.startfile
+    os.startfile = lambda path, *a, **k: _original_startfile(_normalizar_argumento_caminho(path), *a, **k)
+
 # função que atualiza tabelas do focco ao iniciar o programa
 def converter_csv_para_xlsx():
     # Caminho da pasta onde estão os arquivos CSV
@@ -114,6 +321,7 @@ def abrir_tela_cadastro_pecas():
     tela_cadastro.geometry("600x600")
     tela_cadastro.configure(bg="#f4f4f4")
     tela_cadastro.grab_set()
+    adicionar_botao_dependencias(tela_cadastro, "Cadastro de Peças")
 
 
     # Função para exibir ajuda
@@ -291,6 +499,7 @@ def abrir_tela_cadastro_clientes():
     tela_clientes.title("Cadastro de Clientes")
     tela_clientes.geometry("700x750")
     tela_clientes.grab_set()
+    adicionar_botao_dependencias(tela_clientes, "Cadastro de Clientes")
 
     # Abas
     abas = ttk.Notebook(tela_clientes)
@@ -554,6 +763,7 @@ def abrir_tela_orcamento_preventivas():
     tela_orcamento.title("Orçamento de Preventivas")
     tela_orcamento.geometry("600x600")
     tela_orcamento.grab_set()
+    adicionar_botao_dependencias(tela_orcamento, "Orçamento de Preventivas")
 
     def carregar_clientes():
         caminho_clientes = os.path.join(
@@ -1240,6 +1450,7 @@ def abrir_tela_orcamento_preventivas():
 def consultar_orcamentos_pendentes():
     tela_consulta = tk.Toplevel()
     tela_consulta.title("Consultar Orçamentos")
+    adicionar_botao_dependencias(tela_consulta, "Orçamentos Pendentes")
     tela_consulta.geometry("600x400")
     tela_consulta.grab_set()
 
@@ -1701,6 +1912,7 @@ def consultar_orcamentos_cancelados():
     janela.geometry("900x500")
     janela.configure(bg="white")
     janela.grab_set()
+    adicionar_botao_dependencias(janela, "Orçamentos Cancelados")
 
     # Campo de pesquisa
     tk.Label(janela, text="Pesquisar Orçamento:", bg="white").pack(pady=5)
@@ -1849,6 +2061,7 @@ def cadastro_preventivas():
         tela_consulta.title("Consultar Orçamentos")
         tela_consulta.geometry("600x800")
         tela_consulta.grab_set()
+        adicionar_botao_dependencias(tela_consulta, "Cadastro de Preventivas")
 
         ttk.Label(tela_consulta, text="Pesquisar Orçamento (ID ou Nome do Cliente):").pack()
         entrada_pesquisa = ttk.Entry(tela_consulta)
@@ -2362,6 +2575,7 @@ def tela_consulta_preventivas():
     nova_tela.title("Consulta Preventivas Concluídas")
     nova_tela.geometry("900x600")
     nova_tela.grab_set()
+    adicionar_botao_dependencias(nova_tela, "Consulta de Preventivas")
 
     # Filtros na parte superior da tela
     ttk.Label(nova_tela, text="Filtrar por Cliente:").grid(row=0, column=0, padx=10, pady=5)
@@ -2781,6 +2995,7 @@ def adicionar_lembrete():
     lembrete_janela.title("Adicionar Lembrete")
     lembrete_janela.geometry("400x300")
     lembrete_janela.grab_set()
+    adicionar_botao_dependencias(lembrete_janela, "Adicionar Lembrete")
 
     # Campos para preencher
     tk.Label(lembrete_janela, text="Nome do Cliente").pack(pady=5)
@@ -3283,6 +3498,7 @@ def abrir_configuracoes():
     janela.geometry("480x330")
     janela.configure(bg="white")
     janela.grab_set()
+    adicionar_botao_dependencias(janela, "Configurações")
 
     fonte_padrao = ("Arial", 11)
 
@@ -3457,6 +3673,7 @@ def main():
 
 
 if __name__ == "__main__":
+    garantir_estrutura_minima()
     converter_csv_para_xlsx()
     main()
 
