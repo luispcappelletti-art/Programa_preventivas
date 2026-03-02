@@ -97,6 +97,74 @@ def garantir_estrutura_minima():
         pd.DataFrame(columns=["nome_cliente", "segmento", "cidade", "estado"]).to_excel(clientes, index=False)
 
 
+DEPENDENCIAS_POR_TELA = {
+    "Geral": [
+        f"Base do projeto: {BASE_DIR}",
+        f"Dados locais do teste: {DADOS_DIR}",
+        f"Planilhas e orçamentos: {DASHBOARD_DIR}",
+        f"Importações da base externa: {BASE_DADOS_DIR}",
+    ],
+    "Cadastro de Peças": [
+        f"Planilhas CNC: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas', 'cnc')}",
+        f"Planilhas Máquina: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas', 'máquina')}",
+        f"Planilhas Fonte: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas', 'fonte')}",
+        f"Planilhas Acessórios: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas', 'acessórios')}",
+    ],
+    "Cadastro de Clientes": [
+        f"Cadastro mestre de clientes/máquinas: {os.path.join(DASHBOARD_DIR, 'planilhas', 'clientes.xlsx')}",
+        "Modelos de peças vinculados ao cliente vêm das planilhas de CNC/Máquina/Fonte/Acessórios.",
+    ],
+    "Cadastro de Orçamentos": [
+        f"Clientes e máquinas: {os.path.join(DASHBOARD_DIR, 'planilhas', 'clientes.xlsx')}",
+        f"Listas de peças por modelo: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas')}",
+        f"Orçamentos pendentes (xlsx): {os.path.join(DASHBOARD_DIR, 'orçamentos', 'pendentes')}",
+        f"PDF final do orçamento: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'pdfs')}",
+        f"Template PDF opcional: {os.path.join(DASHBOARD_DIR, 'personalizacao', 'template.pdf')}",
+        "Fotos e descrições usadas no PDF vêm da planilha do orçamento selecionado e dos campos preenchidos na tela.",
+    ],
+    "Cadastro de Preventivas": [
+        f"Entrada (orçamentos pendentes): {os.path.join(DASHBOARD_DIR, 'orçamentos', 'pendentes')}",
+        f"Saída (confirmados/concluídos/cancelados): {os.path.join(DASHBOARD_DIR, 'orçamentos')}",
+    ],
+    "Consulta de Preventivas": [
+        f"Arquivos concluídos para consulta/filtros: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'concluídos')}",
+    ],
+    "Peças Avulsas": [
+        f"Cadastro de clientes para autocomplete: {os.path.join(DASHBOARD_DIR, 'planilhas', 'clientes.xlsx')}",
+        f"Histórico de peças avulsas por cliente: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas avulsas')}",
+    ],
+    "Adicionar Lembrete": [
+        f"Notificações salvas em: {os.path.join(DASHBOARD_DIR, 'notificacoes')}",
+        f"Dados de preventivas concluídas para cálculo de alertas: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'concluídos')}",
+    ],
+    "Configurações": [
+        f"Arquivo de parâmetros: {os.path.join(DASHBOARD_DIR, 'personalizacao', 'opcionais.txt')}",
+        f"Template PDF usado na geração: {os.path.join(DASHBOARD_DIR, 'personalizacao', 'template.pdf')}",
+    ],
+}
+
+
+def exibir_ajuda_dependencias(contexto="Geral"):
+    dependencias = DEPENDENCIAS_POR_TELA.get(contexto, [])
+    linhas = DEPENDENCIAS_POR_TELA["Geral"] + dependencias
+    texto = "\n".join(f"• {linha}" for linha in linhas)
+    messagebox.showinfo(f"Dependências - {contexto}", texto)
+
+
+def adicionar_botao_dependencias(janela, contexto):
+    botao = tk.Button(
+        janela,
+        text="?",
+        font=("Arial", 13, "bold"),
+        command=lambda: exibir_ajuda_dependencias(contexto),
+        bg="#f4f4f4",
+        bd=0,
+        cursor="hand2"
+    )
+    botao.place(relx=0.98, rely=0.02, anchor="ne")
+    return botao
+
+
 
 def _normalizar_argumento_caminho(valor):
     if isinstance(valor, str):
@@ -243,6 +311,7 @@ def abrir_tela_cadastro_pecas():
     tela_cadastro.geometry("600x600")
     tela_cadastro.configure(bg="#f4f4f4")
     tela_cadastro.grab_set()
+    adicionar_botao_dependencias(tela_cadastro, "Cadastro de Peças")
 
 
 
@@ -421,6 +490,7 @@ def abrir_tela_cadastro_clientes():
     tela_clientes.title("Cadastro de Clientes")
     tela_clientes.geometry("700x750")
     tela_clientes.grab_set()
+    adicionar_botao_dependencias(tela_clientes, "Cadastro de Clientes")
 
 
     # Abas
@@ -685,6 +755,7 @@ def abrir_tela_orcamento_preventivas():
     tela_orcamento.title("Orçamento de Preventivas")
     tela_orcamento.geometry("600x600")
     tela_orcamento.grab_set()
+    adicionar_botao_dependencias(tela_orcamento, "Cadastro de Orçamentos")
 
 
     def carregar_clientes():
@@ -2177,6 +2248,7 @@ def abrir_tela_pecas_avulsas():
     tela_preventivas.title("Lançamento de Peças Avulsas")
     tela_preventivas.geometry("800x700")
     tela_preventivas.grab_set()
+    adicionar_botao_dependencias(tela_preventivas, "Peças Avulsas")
 
     # Carregar clientes do arquivo de clientes.xlsx
     def carregar_clientes():
@@ -3489,6 +3561,7 @@ def main():
     root.title("Dashboard Preventivas")
     root.geometry("1100x850")
     root.configure(bg="#f4f4f4")  # Cor de fundo para um layout mais agradável
+    adicionar_botao_dependencias(root, "Geral")
 
     style = ttk.Style()
     style.theme_use("clam")
@@ -3598,5 +3671,3 @@ if __name__ == "__main__":
     garantir_estrutura_minima()
     converter_csv_para_xlsx()
     main()
-
-
