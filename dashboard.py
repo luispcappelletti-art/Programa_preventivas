@@ -97,6 +97,112 @@ def garantir_estrutura_minima():
         pd.DataFrame(columns=["nome_cliente", "segmento", "cidade", "estado"]).to_excel(clientes, index=False)
 
 
+DEPENDENCIAS_POR_TELA = {
+    "Geral": [
+        f"Base do projeto: {BASE_DIR}",
+        f"Dados locais do teste: {DADOS_DIR}",
+        f"Planilhas e orçamentos: {DASHBOARD_DIR}",
+        f"Importações da base externa: {BASE_DADOS_DIR}",
+    ],
+    "Cadastro de Peças": [
+        f"Planilhas CNC: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas', 'cnc')}",
+        f"Planilhas Máquina: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas', 'máquina')}",
+        f"Planilhas Fonte: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas', 'fonte')}",
+        f"Planilhas Acessórios: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas', 'acessórios')}",
+    ],
+    "Cadastro de Clientes": [
+        f"Cadastro mestre de clientes/máquinas: {os.path.join(DASHBOARD_DIR, 'planilhas', 'clientes.xlsx')}",
+        "Modelos de peças vinculados ao cliente vêm das planilhas de CNC/Máquina/Fonte/Acessórios.",
+    ],
+    "Cadastro de Orçamentos": [
+        f"Clientes e máquinas: {os.path.join(DASHBOARD_DIR, 'planilhas', 'clientes.xlsx')}",
+        f"Listas de peças por modelo: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas')}",
+        f"Orçamentos pendentes (xlsx): {os.path.join(DASHBOARD_DIR, 'orçamentos', 'pendentes')}",
+        f"PDF final do orçamento: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'pdfs')}",
+        f"Template PDF opcional: {os.path.join(DASHBOARD_DIR, 'personalizacao', 'template.pdf')}",
+        "Fotos e descrições usadas no PDF vêm da planilha do orçamento selecionado e dos campos preenchidos na tela.",
+    ],
+    "Cadastro de Preventivas": [
+        f"Entrada (orçamentos pendentes): {os.path.join(DASHBOARD_DIR, 'orçamentos', 'pendentes')}",
+        f"Saída (confirmados/concluídos/cancelados): {os.path.join(DASHBOARD_DIR, 'orçamentos')}",
+    ],
+    "Consulta de Preventivas": [
+        f"Arquivos concluídos para consulta/filtros: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'concluídos')}",
+    ],
+    "Peças Avulsas": [
+        f"Cadastro de clientes para autocomplete: {os.path.join(DASHBOARD_DIR, 'planilhas', 'clientes.xlsx')}",
+        f"Histórico de peças avulsas por cliente: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas avulsas')}",
+    ],
+    "Adicionar Lembrete": [
+        f"Notificações salvas em: {os.path.join(DASHBOARD_DIR, 'notificacoes')}",
+        f"Dados de preventivas concluídas para cálculo de alertas: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'concluídos')}",
+    ],
+    "Configurações": [
+        f"Arquivo de parâmetros: {os.path.join(DASHBOARD_DIR, 'personalizacao', 'opcionais.txt')}",
+        f"Template PDF usado na geração: {os.path.join(DASHBOARD_DIR, 'personalizacao', 'template.pdf')}",
+    ],
+    "Seleção de Peças": [
+        f"Dados de cliente/máquina: {os.path.join(DASHBOARD_DIR, 'planilhas', 'clientes.xlsx')}",
+        f"Planilhas de peças por modelo: {os.path.join(DASHBOARD_DIR, 'planilhas', 'pecas')}",
+        f"Estoque e histórico para apoio: {os.path.join(DASHBOARD_DIR, 'planilhas', 'estoque')}",
+    ],
+    "Orçamentos Pendentes": [
+        f"Orçamentos em análise: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'pendentes')}",
+        f"Motivos de cancelamento: {os.path.join(DASHBOARD_DIR, 'planilhas', 'motivos_de_cancelamento.txt')}",
+        f"PDFs gerados desta tela: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'pdfs')}",
+    ],
+    "Orçamentos Cancelados": [
+        f"Lista de cancelados: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'cancelados')}",
+        f"Motivos de cancelamento editáveis: {os.path.join(DASHBOARD_DIR, 'planilhas', 'motivos_de_cancelamento.txt')}",
+    ],
+    "Detalhes de Preventiva": [
+        f"Arquivo origem da preventiva: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'concluídos')}",
+    ],
+    "Detalhes de Ticket": [
+        f"Tickets/confirmados: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'confirmados')}",
+    ],
+    "Estatísticas de Cadastro": [
+        f"Base de orçamentos (histórico): {os.path.join(DASHBOARD_DIR, 'orçamentos')}",
+    ],
+    "Efetividade Comercial": [
+        f"Pastas usadas (pendentes/cancelados/concluídos): {os.path.join(DASHBOARD_DIR, 'orçamentos')}",
+    ],
+    "Escolher Visualização": [
+        f"Concluídos para ranking de peças: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'concluídos')}",
+        f"Histórico de vendas avulsas: {os.path.join(DASHBOARD_DIR, 'planilhas', 'historico_de_vendas', 'historico_vendas.xls')}",
+    ],
+    "Ranking de Peças": [
+        f"Concluídos para peças em preventiva: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'concluídos')}",
+        f"Histórico de vendas avulsas: {os.path.join(DASHBOARD_DIR, 'planilhas', 'historico_de_vendas', 'historico_vendas.xls')}",
+    ],
+    "Gráfico de Peças": [
+        f"Concluídos para peças em preventiva: {os.path.join(DASHBOARD_DIR, 'orçamentos', 'concluídos')}",
+        f"Histórico de vendas avulsas: {os.path.join(DASHBOARD_DIR, 'planilhas', 'historico_de_vendas', 'historico_vendas.xls')}",
+    ],
+}
+
+
+def exibir_ajuda_dependencias(contexto="Geral"):
+    dependencias = DEPENDENCIAS_POR_TELA.get(contexto, [])
+    linhas = DEPENDENCIAS_POR_TELA["Geral"] + dependencias
+    texto = "\n".join(f"• {linha}" for linha in linhas)
+    messagebox.showinfo(f"Dependências - {contexto}", texto)
+
+
+def adicionar_botao_dependencias(janela, contexto):
+    botao = tk.Button(
+        janela,
+        text="?",
+        font=("Arial", 13, "bold"),
+        command=lambda: exibir_ajuda_dependencias(contexto),
+        bg="#f4f4f4",
+        bd=0,
+        cursor="hand2"
+    )
+    botao.place(relx=0.98, rely=0.02, anchor="ne")
+    return botao
+
+
 
 def _normalizar_argumento_caminho(valor):
     if isinstance(valor, str):
@@ -243,6 +349,7 @@ def abrir_tela_cadastro_pecas():
     tela_cadastro.geometry("600x600")
     tela_cadastro.configure(bg="#f4f4f4")
     tela_cadastro.grab_set()
+    adicionar_botao_dependencias(tela_cadastro, "Cadastro de Peças")
 
 
 
@@ -421,6 +528,7 @@ def abrir_tela_cadastro_clientes():
     tela_clientes.title("Cadastro de Clientes")
     tela_clientes.geometry("700x750")
     tela_clientes.grab_set()
+    adicionar_botao_dependencias(tela_clientes, "Cadastro de Clientes")
 
 
     # Abas
@@ -685,6 +793,7 @@ def abrir_tela_orcamento_preventivas():
     tela_orcamento.title("Orçamento de Preventivas")
     tela_orcamento.geometry("600x600")
     tela_orcamento.grab_set()
+    adicionar_botao_dependencias(tela_orcamento, "Cadastro de Orçamentos")
 
 
     def carregar_clientes():
@@ -758,6 +867,7 @@ def abrir_tela_orcamento_preventivas():
     def abrir_tela_selecao_pecas(cliente, pecas):
         tela_pecas = tk.Toplevel()
         tela_pecas.title("Seleção de Peças")
+        adicionar_botao_dependencias(tela_pecas, "Seleção de Peças")
         tela_pecas.geometry("1000x600")
 
         tela_orcamento.destroy()
@@ -1280,6 +1390,7 @@ def abrir_tela_orcamento_preventivas():
         print("[TELA] Abrindo janela com peças compradas no último ano...")
 
         tela = tk.Toplevel()
+        adicionar_botao_dependencias(tela, "Seleção de Peças")
         tela.title("Peças Compradas no Último Ano")
         tela.geometry("850x400")
         tela.grab_set()
@@ -1372,6 +1483,7 @@ def abrir_tela_orcamento_preventivas():
 def consultar_orcamentos_pendentes():
     tela_consulta = tk.Toplevel()
     tela_consulta.title("Consultar Orçamentos")
+    adicionar_botao_dependencias(tela_consulta, "Orçamentos Pendentes")
 
     tela_consulta.geometry("600x400")
     tela_consulta.grab_set()
@@ -1831,6 +1943,7 @@ def consultar_orcamentos_cancelados():
     # Janela principal
     janela = tk.Toplevel()
     janela.title("Orçamentos Cancelados")
+    adicionar_botao_dependencias(janela, "Orçamentos Cancelados")
     janela.geometry("900x500")
     janela.configure(bg="white")
     janela.grab_set()
@@ -2012,6 +2125,7 @@ def cadastro_preventivas():
 
             tela_pecas = tk.Toplevel()
             tela_pecas.title("Peças do Orçamento")
+            adicionar_botao_dependencias(tela_pecas, "Cadastro de Preventivas")
             tela_pecas.geometry("700x600")
             tela_pecas.grab_set()
 
@@ -2177,6 +2291,7 @@ def abrir_tela_pecas_avulsas():
     tela_preventivas.title("Lançamento de Peças Avulsas")
     tela_preventivas.geometry("800x700")
     tela_preventivas.grab_set()
+    adicionar_botao_dependencias(tela_preventivas, "Peças Avulsas")
 
     # Carregar clientes do arquivo de clientes.xlsx
     def carregar_clientes():
@@ -2388,6 +2503,7 @@ def exibir_detalhes_preventiva(preventiva):
 
     nova_tela = tk.Toplevel()
     nova_tela.title(f"Detalhes da Preventiva - {preventiva['nome_cliente']}")
+    adicionar_botao_dependencias(nova_tela, "Detalhes de Preventiva")
     nova_tela.geometry("800x600")
     nova_tela.grab_set()
 
@@ -2595,6 +2711,7 @@ def exibir_detalhes(ticket):
 
     nova_tela = tk.Toplevel()
     nova_tela.title(f"Detalhes do Orçamento - {ticket['nome_cliente']}")
+    adicionar_botao_dependencias(nova_tela, "Detalhes de Ticket")
     nova_tela.geometry("800x600")
     nova_tela.grab_set()
 
@@ -2878,6 +2995,7 @@ def verificar_notificacoes(notificacoes_frame, root):
 def abrir_detalhes_preventiva(caminho_arquivo, root, notificacoes_frame):
     detalhes_janela = tk.Toplevel(root)
     detalhes_janela.title("Detalhes da Preventiva")
+    adicionar_botao_dependencias(detalhes_janela, "Detalhes de Preventiva")
     detalhes_janela.geometry("400x400")
     detalhes_janela.grab_set()
 
@@ -3041,6 +3159,7 @@ def estatistica_geral():
     # Criação da interface gráfica
     janela = tk.Toplevel()
     janela.title("Estatísticas Gerais")
+    adicionar_botao_dependencias(janela, "Estatísticas de Cadastro")
     janela.geometry("450x300")
     janela.configure(bg="#f4f4f4")
     janela.grab_set()
@@ -3190,6 +3309,7 @@ def estatisticas_comerciais():
 
     janela = tk.Toplevel()
     janela.title("Estatísticas Comerciais")
+    adicionar_botao_dependencias(janela, "Efetividade Comercial")
     janela.geometry("820x950")
     janela.configure(bg="#f4f4f4")
     janela.grab_set()
@@ -3287,6 +3407,7 @@ def gerar_tela_estatisticas_pecas():
     def exibir_ranking(total_prev, ranking_prev, total_avul, ranking_avul):
         janela = tk.Toplevel()
         janela.title("Estatísticas - Ranking Completo")
+        adicionar_botao_dependencias(janela, "Ranking de Peças")
         janela.geometry("1100x650")
         janela.configure(bg="#f4f4f4")
         janela.grab_set()
@@ -3343,6 +3464,7 @@ def gerar_tela_estatisticas_pecas():
     def exibir_grafico(titulo, dados):
         janela = tk.Toplevel()
         janela.title(f"Estatísticas - {titulo}")
+        adicionar_botao_dependencias(janela, "Gráfico de Peças")
         janela.geometry("1000x600")
 
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -3361,6 +3483,7 @@ def gerar_tela_estatisticas_pecas():
     def selecionar_visualizacao():
         root = tk.Tk()
         root.title("Escolher Visualização")
+        adicionar_botao_dependencias(root, "Escolher Visualização")
         root.geometry("300x180")
 
         ttk.Label(root, text="Selecione a forma de exibição:", font=("Arial", 11)).pack(pady=15)
@@ -3489,6 +3612,7 @@ def main():
     root.title("Dashboard Preventivas")
     root.geometry("1100x850")
     root.configure(bg="#f4f4f4")  # Cor de fundo para um layout mais agradável
+    adicionar_botao_dependencias(root, "Geral")
 
     style = ttk.Style()
     style.theme_use("clam")
@@ -3598,5 +3722,3 @@ if __name__ == "__main__":
     garantir_estrutura_minima()
     converter_csv_para_xlsx()
     main()
-
-
