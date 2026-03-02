@@ -30,6 +30,134 @@ from collections import defaultdict
 from openpyxl.styles import numbers
 
 
+import builtins
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DADOS_DIR = os.path.join(BASE_DIR, "dados_teste")
+DASHBOARD_DIR = os.path.join(DADOS_DIR, "dashboard")
+BASE_DADOS_DIR = os.path.join(DADOS_DIR, "base_dados")
+
+LEGACY_DASHBOARD_ROOT = r"S:\ASSISTÊNCIA TÉCNICA\0-Luís Cappeletti\programa preventivas\dashboard"
+LEGACY_BASE_DADOS_ROOT = r"G:\ASSISTÊNCIA TÉCNICA\Base de Dados Preventivas e Peças"
+
+
+def normalizar_caminho(caminho):
+    if not isinstance(caminho, str):
+        return caminho
+
+    for antigo, novo in (
+        (LEGACY_DASHBOARD_ROOT, DASHBOARD_DIR),
+        (LEGACY_BASE_DADOS_ROOT, BASE_DADOS_DIR),
+    ):
+        caminho = caminho.replace(antigo, novo)
+        caminho = caminho.replace(antigo.replace("\\", "/"), novo.replace("\\", "/"))
+
+    return os.path.normpath(caminho)
+
+
+def garantir_estrutura_minima():
+    pastas = [
+        DADOS_DIR,
+        BASE_DADOS_DIR,
+        os.path.join(DASHBOARD_DIR, "planilhas"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas", "cnc"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas", "máquina"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas", "fonte"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas", "acessórios"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "historico_de_vendas"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "estoque"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "clientes_explosao"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "informacoes_detalhadas"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "atualizacao_preco"),
+        os.path.join(DASHBOARD_DIR, "planilhas", "pecas avulsas"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "pendentes"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "cancelados"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "confirmados"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "concluídos"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "historico_orçamentos"),
+        os.path.join(DASHBOARD_DIR, "orçamentos", "pdfs"),
+        os.path.join(DASHBOARD_DIR, "notificacoes"),
+        os.path.join(DASHBOARD_DIR, "personalizacao"),
+    ]
+    for pasta in pastas:
+        os.makedirs(pasta, exist_ok=True)
+
+    arquivos_texto = {
+        os.path.join(DASHBOARD_DIR, "planilhas", "motivos_de_cancelamento.txt"): "",
+        os.path.join(DASHBOARD_DIR, "personalizacao", "opcionais.txt"): "",
+    }
+    for caminho, conteudo in arquivos_texto.items():
+        if not os.path.exists(caminho):
+            with open(caminho, "w", encoding="utf-8") as f:
+                f.write(conteudo)
+
+    clientes = os.path.join(DASHBOARD_DIR, "planilhas", "clientes.xlsx")
+    if not os.path.exists(clientes):
+        pd.DataFrame(columns=["nome_cliente", "segmento", "cidade", "estado"]).to_excel(clientes, index=False)
+
+
+def _normalizar_argumento_caminho(valor):
+    if isinstance(valor, str):
+        return normalizar_caminho(valor)
+    return valor
+
+
+_original_open = builtins.open
+
+def _open_compat(arquivo, *args, **kwargs):
+    arquivo = _normalizar_argumento_caminho(arquivo)
+    if isinstance(arquivo, str) and any(modo in args[0] if args else kwargs.get("mode", "r") for modo in ("w", "a", "x", "+")):
+        pasta = os.path.dirname(arquivo)
+        if pasta:
+            os.makedirs(pasta, exist_ok=True)
+    return _original_open(arquivo, *args, **kwargs)
+
+builtins.open = _open_compat
+
+_original_listdir = os.listdir
+os.listdir = lambda path: _original_listdir(_normalizar_argumento_caminho(path))
+
+_original_exists = os.path.exists
+os.path.exists = lambda path: _original_exists(_normalizar_argumento_caminho(path))
+
+_original_remove = os.remove
+os.remove = lambda path: _original_remove(_normalizar_argumento_caminho(path))
+
+_original_makedirs = os.makedirs
+os.makedirs = lambda name, mode=0o777, exist_ok=False: _original_makedirs(_normalizar_argumento_caminho(name), mode=mode, exist_ok=exist_ok)
+
+_original_move = shutil.move
+shutil.move = lambda src, dst, *a, **k: _original_move(_normalizar_argumento_caminho(src), _normalizar_argumento_caminho(dst), *a, **k)
+
+_original_copy = shutil.copy
+shutil.copy = lambda src, dst, *a, **k: _original_copy(_normalizar_argumento_caminho(src), _normalizar_argumento_caminho(dst), *a, **k)
+
+_original_glob = glob.glob
+glob.glob = lambda pathname, *a, **k: _original_glob(_normalizar_argumento_caminho(pathname), *a, **k)
+
+_original_read_excel = pd.read_excel
+pd.read_excel = lambda io, *a, **k: _original_read_excel(_normalizar_argumento_caminho(io), *a, **k)
+
+_original_read_csv = pd.read_csv
+pd.read_csv = lambda filepath_or_buffer, *a, **k: _original_read_csv(_normalizar_argumento_caminho(filepath_or_buffer), *a, **k)
+
+_original_df_to_excel = pd.DataFrame.to_excel
+
+def _to_excel_compat(self, excel_writer, *args, **kwargs):
+    excel_writer = _normalizar_argumento_caminho(excel_writer)
+    if isinstance(excel_writer, str):
+        pasta = os.path.dirname(excel_writer)
+        if pasta:
+            os.makedirs(pasta, exist_ok=True)
+    return _original_df_to_excel(self, excel_writer, *args, **kwargs)
+
+pd.DataFrame.to_excel = _to_excel_compat
+
+if hasattr(os, "startfile"):
+    _original_startfile = os.startfile
+    os.startfile = lambda path, *a, **k: _original_startfile(_normalizar_argumento_caminho(path), *a, **k)
+
 # função que atualiza tabelas do focco ao iniciar o programa
 def converter_csv_para_xlsx():
     # Caminho da pasta onde estão os arquivos CSV
@@ -3457,6 +3585,7 @@ def main():
 
 
 if __name__ == "__main__":
+    garantir_estrutura_minima()
     converter_csv_para_xlsx()
     main()
 
